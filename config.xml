@@ -2,7 +2,7 @@
 <module>
     <name>josralimpieza</name>
     <displayName><![CDATA[Limpieza de base de datos e imágenes]]></displayName>
-    <version><![CDATA[1.0.0]]></version>
+    <version><![CDATA[1.0.1]]></version>
     <description><![CDATA[Aligera la tienda: limpia registros y filas inútiles de la base de datos, optimiza tablas y retira las imágenes de producto que ya no se usan. Siempre por lotes AJAX, viendo antes qué se va a tocar y con copia previa de todo.]]></description>
     <author><![CDATA[josra]]></author>
     <tab><![CDATA[administration]]></tab>

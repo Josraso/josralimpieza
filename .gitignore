@@ -1,0 +1,5 @@
+# copias y cuarentena que genera el módulo en la tienda
+storage/copias/
+storage/cuarentena/
+storage/cron.lock
+*.log

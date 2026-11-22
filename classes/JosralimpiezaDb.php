@@ -405,8 +405,33 @@ class JosralimpiezaDb
         }
 
         $keys = self::primaryKey($item['table']);
+        $conCopia = $item['backup'] && $idBackup;
+
+        // Sin copia previa y sin uniones: se borra directamente, que es lo más
+        // rápido que puede hacer MySQL (no hay que leer las filas antes).
+        if (!$conCopia && $item['joins'] === '') {
+            $where = str_replace('`t`.', $table . '.', $item['where']);
+            if (!Db::getInstance()->execute(
+                'DELETE FROM ' . $table . ($where !== '' ? ' WHERE ' . $where : '') . ' LIMIT ' . (int) $limit
+            )) {
+                return 'No se pudo borrar de ' . _DB_PREFIX_ . $item['table'] . ': ' . Db::getInstance()->getMsgError();
+            }
+            $deleted = (int) Db::getInstance()->Affected_Rows();
+
+            return array('deleted' => $deleted, 'done' => $deleted < (int) $limit);
+        }
+
+        // Sin copia previa basta con leer las claves; con copia hace falta la fila entera
+        $select = '`t`.*';
+        if (!$conCopia) {
+            $columns = array();
+            foreach ($keys as $key) {
+                $columns[] = '`t`.`' . bqSQL($key) . '`';
+            }
+            $select = implode(', ', $columns);
+        }
         $rows = Db::getInstance()->executeS(
-            'SELECT `t`.* FROM ' . self::from($item) . ' LIMIT ' . (int) $limit
+            'SELECT ' . $select . ' FROM ' . self::from($item) . ' LIMIT ' . (int) $limit
         );
         if (!is_array($rows)) {
             return 'No se pudo leer de ' . _DB_PREFIX_ . $item['table'] . ': ' . Db::getInstance()->getMsgError();
@@ -416,7 +441,7 @@ class JosralimpiezaDb
         }
 
         // La copia previa va primero: si falla, no se borra nada
-        if ($item['backup'] && $idBackup) {
+        if ($conCopia) {
             $saved = JosralimpiezaBackup::append($idBackup, $item['table'], $rows);
             if ($saved !== true) {
                 return $saved;

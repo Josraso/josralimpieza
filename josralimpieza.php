@@ -36,7 +36,7 @@ class Josralimpieza extends Module
     {
         $this->name = 'josralimpieza';
         $this->tab = 'administration';
-        $this->version = '1.0.0';
+        $this->version = '1.0.1';
         $this->author = 'josra';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -319,7 +319,7 @@ class Josralimpieza extends Module
                         'name' => 'JOSRALIMPIEZA_LOTE_BD',
                         'class' => 'fixed-width-sm',
                         'required' => true,
-                        'desc' => $this->l('Entre 50 y 5000. Si el servidor va justo, bájalo.'),
+                        'desc' => $this->l('Entre 50 y 50000. Cada llamada encadena lotes hasta agotar el tiempo que da el servidor, así que con 2000 va bien. Si el servidor va justo, bájalo.'),
                     ),
                     array(
                         'type' => 'text',
@@ -492,6 +492,7 @@ class Josralimpieza extends Module
      */
     protected function ajax()
     {
+        @set_time_limit(0);
         while (ob_get_level()) {
             ob_end_clean();
         }
@@ -566,6 +567,20 @@ class Josralimpieza extends Module
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($response);
         die();
+    }
+
+    /**
+     * Segundos que puede trabajar una llamada AJAX seguidos. Así cada petición
+     * hace muchos lotes en vez de uno, que es lo que hacía que una tabla de
+     * millones de filas tardara siglos: antes se gastaba casi todo el tiempo en
+     * ir y volver al servidor, no en borrar.
+     */
+    protected function ajaxBudget()
+    {
+        $limit = (int) ini_get('max_execution_time');
+        $budget = $limit <= 0 ? 20 : max(5, min(20, $limit - 10));
+
+        return $budget;
     }
 
     /**
@@ -680,20 +695,49 @@ class Josralimpieza extends Module
             return array('ok' => false, 'error' => 'Ese apartado no existe en esta tienda.');
         }
         $idBackup = (int) Tools::getValue('copia');
-        if ($item['backup'] && !$idBackup) {
+        $sinCopia = (int) Tools::getValue('sincopia');
+        if ($item['backup'] && !$idBackup && !$sinCopia) {
             return array('ok' => false, 'error' => 'No hay copia previa abierta: no se borra nada.');
         }
-        $result = JosralimpiezaDb::cleanItem($item, (int) JosralimpiezaCore::setting('LOTE_BD'), $idBackup);
-        if (!is_array($result)) {
-            return array('ok' => false, 'error' => (string) $result);
-        }
-        if (!empty($result['truncated'])) {
+
+        // Muchos lotes en una sola llamada, hasta agotar el tiempo que da el servidor
+        $batch = (int) JosralimpiezaCore::setting('LOTE_BD');
+        $budget = $this->ajaxBudget();
+        $start = microtime(true);
+        $deleted = 0;
+        $done = false;
+        $truncated = false;
+        $lotes = 0;
+        do {
+            $result = JosralimpiezaDb::cleanItem($item, $batch, $idBackup);
+            if (!is_array($result)) {
+                if ($deleted) {
+                    JosralimpiezaCore::addHistory('Limpieza de base de datos', $item['name'] . ' (' . _DB_PREFIX_ . $item['table'] . ')', $deleted, 0, $idBackup);
+                }
+
+                return array('ok' => false, 'error' => (string) $result, 'deleted' => $deleted);
+            }
+            $deleted += (int) $result['deleted'];
+            $done = !empty($result['done']);
+            $truncated = !empty($result['truncated']);
+            ++$lotes;
+        } while (!$done && (microtime(true) - $start) < $budget);
+
+        if ($truncated) {
             JosralimpiezaCore::addHistory('Vaciar tabla', $item['name'] . ' (' . _DB_PREFIX_ . $item['table'] . ')', 0, 0, 0);
-        } elseif ($result['deleted']) {
-            JosralimpiezaCore::addHistory('Limpieza de base de datos', $item['name'] . ' (' . _DB_PREFIX_ . $item['table'] . ')', (int) $result['deleted'], 0, $idBackup);
+        } elseif ($deleted) {
+            JosralimpiezaCore::addHistory('Limpieza de base de datos', $item['name'] . ' (' . _DB_PREFIX_ . $item['table'] . ')', $deleted, 0, $idBackup);
         }
 
-        return array_merge(array('ok' => true, 'item' => $item['id']), $result);
+        return array(
+            'ok' => true,
+            'item' => $item['id'],
+            'deleted' => $deleted,
+            'done' => $done,
+            'truncated' => $truncated,
+            'lotes' => $lotes,
+            'segundos' => round(microtime(true) - $start, 1),
+        );
     }
 
     protected function ajaxImgResumen()
@@ -744,15 +788,37 @@ class Josralimpieza extends Module
         if (!is_array($kinds)) {
             $kinds = array_filter(explode(',', (string) $kinds));
         }
-        $result = JosralimpiezaImages::quarantineBatch($idBackup, $kinds, (int) JosralimpiezaCore::setting('LOTE_BD'));
-        if (!is_array($result)) {
-            return array('ok' => false, 'error' => (string) $result);
+        $budget = $this->ajaxBudget();
+        $start = microtime(true);
+        $moved = 0;
+        $bytes = 0;
+        $skipped = 0;
+        $done = false;
+        $error = '';
+        do {
+            $result = JosralimpiezaImages::quarantineBatch($idBackup, $kinds, 200);
+            if (!is_array($result)) {
+                $error = (string) $result;
+                break;
+            }
+            $moved += (int) $result['moved'];
+            $bytes += (float) $result['bytes'];
+            $skipped += (int) $result['skipped'];
+            $done = !empty($result['done']);
+            if (!empty($result['error'])) {
+                $error = $result['error'];
+                break;
+            }
+        } while (!$done && (microtime(true) - $start) < $budget);
+
+        if ($moved) {
+            JosralimpiezaCore::addHistory('Imágenes a la cuarentena', implode(', ', $kinds), $moved, $bytes, $idBackup);
         }
-        if (!empty($result['moved'])) {
-            JosralimpiezaCore::addHistory('Imágenes a la cuarentena', implode(', ', $kinds), (int) $result['moved'], (float) $result['bytes'], $idBackup);
+        if ($error !== '' && !$moved) {
+            return array('ok' => false, 'error' => $error);
         }
 
-        return array_merge(array('ok' => true), $result);
+        return array('ok' => true, 'moved' => $moved, 'bytes' => $bytes, 'skipped' => $skipped, 'done' => $done, 'error' => $error);
     }
 
     protected function ajaxImgRegistros()
@@ -761,15 +827,26 @@ class Josralimpieza extends Module
         if (!$idBackup) {
             return array('ok' => false, 'error' => 'No hay copia previa abierta: no se borra nada.');
         }
-        $result = JosralimpiezaImages::cleanMissingBatch($idBackup, (int) JosralimpiezaCore::setting('LOTE_BD'));
-        if (!is_array($result)) {
-            return array('ok' => false, 'error' => (string) $result);
-        }
-        if (!empty($result['deleted'])) {
-            JosralimpiezaCore::addHistory('Imágenes sin archivo borradas de la base de datos', $result['images'] . ' imágenes', (int) $result['deleted'], 0, $idBackup);
+        $budget = $this->ajaxBudget();
+        $start = microtime(true);
+        $deleted = 0;
+        $images = 0;
+        $done = false;
+        do {
+            $result = JosralimpiezaImages::cleanMissingBatch($idBackup, 500);
+            if (!is_array($result)) {
+                return array('ok' => false, 'error' => (string) $result, 'deleted' => $deleted);
+            }
+            $deleted += (int) $result['deleted'];
+            $images += isset($result['images']) ? (int) $result['images'] : 0;
+            $done = !empty($result['done']);
+        } while (!$done && (microtime(true) - $start) < $budget);
+
+        if ($deleted) {
+            JosralimpiezaCore::addHistory('Imágenes sin archivo borradas de la base de datos', $images . ' imágenes', $deleted, 0, $idBackup);
         }
 
-        return array_merge(array('ok' => true), $result);
+        return array('ok' => true, 'deleted' => $deleted, 'images' => $images, 'done' => $done);
     }
 
     protected function ajaxTablas()

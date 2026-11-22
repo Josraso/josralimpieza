@@ -66,6 +66,22 @@
                     <div>Las copias del módulo cubren lo que borra el módulo, pero antes de una limpieza grande conviene tener la copia completa del servidor.</div>
                 </div>
 
+                <div class="well" style="padding:10px 15px">
+                    <strong>Marcar:</strong>
+                    <button type="button" class="btn btn-default btn-xs" id="jl-marcar-todo">Todo</button>
+                    <button type="button" class="btn btn-default btn-xs" id="jl-marcar-seguras">Solo lo seguro</button>
+                    <button type="button" class="btn btn-default btn-xs" id="jl-marcar-nada">Nada</button>
+                    <span style="display:inline-block;width:25px"></span>
+                    <label style="font-weight:bold">
+                        <input type="checkbox" id="jl-con-copia" checked> Guardar copia previa de lo que se borre
+                    </label>
+                    <div class="help-block" style="margin:6px 0 0">
+                        La copia deja restaurar lo borrado, pero en tablas de millones de filas es lo que más tarda, porque hay que
+                        leer y escribir cada fila. Sin copia, el borrado va directo y es muchísimo más rápido, pero
+                        <strong>no se puede deshacer</strong>. Para registros y estadísticas no suele hacer falta copia.
+                    </div>
+                </div>
+
                 {foreach from=$jl_groups key=idgroup item=group}
                     <div class="panel panel-default">
                         <div class="panel-heading">{$group.name|escape:'html':'UTF-8'}</div>
@@ -74,7 +90,9 @@
                             <table class="table">
                                 <thead>
                                     <tr>
-                                        <th style="width:30px"></th>
+                                        <th style="width:30px">
+                                            <input type="checkbox" class="jl-grupo" title="Marcar o desmarcar todo el grupo">
+                                        </th>
                                         <th>Qué se limpia</th>
                                         <th>Tabla</th>
                                         <th class="text-right" style="width:120px">Filas</th>

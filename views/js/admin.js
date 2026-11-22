@@ -174,6 +174,27 @@
         })();
     });
 
+    $(document).on('click', '#jl-marcar-todo', function () {
+        $('#jl-bd .jl-item:not(:disabled)').prop('checked', true);
+        $('#jl-bd .jl-grupo').prop('checked', true);
+    });
+
+    $(document).on('click', '#jl-marcar-nada', function () {
+        $('#jl-bd .jl-item').prop('checked', false);
+        $('#jl-bd .jl-grupo').prop('checked', false);
+    });
+
+    $(document).on('click', '#jl-marcar-seguras', function () {
+        $('#jl-bd .jl-item:not(:disabled)').each(function () {
+            $(this).prop('checked', parseInt($(this).data('riesgo'), 10) === 0);
+        });
+        $('#jl-bd .jl-grupo').prop('checked', false);
+    });
+
+    $(document).on('change', '#jl-bd .jl-grupo', function () {
+        $(this).closest('table').find('.jl-item:not(:disabled)').prop('checked', $(this).is(':checked'));
+    });
+
     $(document).on('click', '.jl-ver', function () {
         var item = $(this).data('item');
         $('#jl-visor').show().html('<p>Leyendo las primeras filas…</p>');
@@ -203,8 +224,11 @@
             alert('No has marcado ningún apartado.');
             return;
         }
-        var aviso = 'Se van a borrar las filas de ' + items.length + ' apartado(s).\n\n'
-            + 'Antes de borrar cada lote se guarda una copia en la pestaña Copias, desde la que se pueden devolver.';
+        var conCopia = $('#jl-con-copia').is(':checked');
+        var aviso = 'Se van a borrar las filas de ' + items.length + ' apartado(s).\n\n';
+        aviso += conCopia
+            ? 'Antes de borrar cada lote se guarda una copia en la pestaña Copias, desde la que se pueden devolver.'
+            : 'SIN copia previa: va mucho más rápido, pero lo que se borre NO se podrá recuperar desde el módulo.';
         if (riesgo) {
             aviso += '\n\nHay apartados marcados que conviene revisar antes (carritos, clientes, catálogo).';
         }
@@ -219,15 +243,23 @@
         var borradas = 0;
         var index = 0;
         var errores = 0;
+        var totalFilas = 0;
+        $('#jl-bd .jl-item:checked:not(:disabled)').each(function () {
+            totalFilas += parseInt($(this).data('filas'), 10) || 0;
+        });
 
-        post('abrir_copia', { tipo: 'bd', titulo: 'Limpieza de base de datos: ' + items.length + ' apartados' }, function (r) {
+        function conCopiaAbierta(r) {
             if (!r.ok) {
                 bloquear('bd', false);
                 banner('#jl-bd-banner', 'danger', 'No se ha borrado nada', r.error);
                 return;
             }
-            var copia = r.copia;
-            log('#jl-bd-log', 'Copia previa abierta (número ' + copia + ').');
+            var copia = r.copia || 0;
+            if (copia) {
+                log('#jl-bd-log', 'Copia previa abierta (número ' + copia + ').');
+            } else {
+                log('#jl-bd-log', 'Borrado directo, sin copia previa.');
+            }
 
             function terminar(cortado) {
                 post('cerrar_copia', { copia: copia }, function () {
@@ -236,13 +268,15 @@
                     $('#jl-historial-recargar').click();
                     if (cortado) {
                         banner('#jl-bd-banner', 'warning', 'Limpieza detenida',
-                            'Se han borrado ' + borradas + ' filas antes de parar. Lo guardado está en la pestaña Copias.');
+                            'Se han borrado ' + borradas + ' filas antes de parar.'
+                            + (copia ? ' Lo guardado está en la pestaña Copias.' : ''));
                     } else if (errores) {
                         banner('#jl-bd-banner', 'warning', 'Limpieza terminada con avisos (' + segundos(inicio) + ')',
                             borradas + ' filas borradas, ' + errores + ' apartados fallaron. Mira el registro de abajo.');
                     } else {
                         banner('#jl-bd-banner', 'success', 'Limpieza terminada (' + segundos(inicio) + ')',
-                            borradas + ' filas borradas y guardadas en la copia número ' + copia
+                            borradas + ' filas borradas'
+                            + (copia ? ' y guardadas en la copia número ' + copia : ' (sin copia previa)')
                             + '. Para recuperar el espacio en disco, pasa por la pestaña Optimizar.');
                     }
                 });
@@ -265,17 +299,24 @@
                         terminar(true);
                         return;
                     }
-                    post('limpiar', { item: item.id, copia: copia }, function (r) {
+                    post('limpiar', { item: item.id, copia: copia, sincopia: copia ? 0 : 1 }, function (r) {
                         if (!r.ok) {
                             ++errores;
+                            borradas += parseInt(r.deleted, 10) || 0;
                             log('#jl-bd-log', item.nombre + ': ' + r.error, 'error');
                             siguienteItem();
                             return;
                         }
                         deEste += parseInt(r.deleted, 10) || 0;
                         borradas += parseInt(r.deleted, 10) || 0;
-                        progreso('#jl-bd-progreso', index, items.length,
-                            item.nombre + ': ' + deEste + ' filas (total ' + borradas + ')');
+                        if (totalFilas > 0) {
+                            progreso('#jl-bd-progreso', borradas, totalFilas,
+                                item.nombre + ': ' + deEste + ' filas — ' + borradas + ' de ' + totalFilas
+                                + ' en ' + segundos(inicio));
+                        } else {
+                            progreso('#jl-bd-progreso', index, items.length,
+                                item.nombre + ': ' + deEste + ' filas (total ' + borradas + ')');
+                        }
                         $('#jl-bd .jl-count[data-item="' + item.id + '"]').html('<span class="text-muted">limpiando…</span>');
                         if (r.truncated) {
                             log('#jl-bd-log', item.nombre + ': tabla vaciada.', 'ok');
@@ -293,7 +334,13 @@
                     });
                 })();
             })();
-        });
+        }
+
+        if (conCopia) {
+            post('abrir_copia', { tipo: 'bd', titulo: 'Limpieza de base de datos: ' + items.length + ' apartados' }, conCopiaAbierta);
+        } else {
+            conCopiaAbierta({ ok: true, copia: 0 });
+        }
     });
 
     /* ------------------------------------------------------------------ */

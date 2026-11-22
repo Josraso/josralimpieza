@@ -33,7 +33,7 @@ class JosralimpiezaCore
             'ANTIGUEDAD_REGISTROS' => 3,
             'ANTIGUEDAD_CARRITOS' => 6,
             'RETENCION' => 30,
-            'LOTE_BD' => 500,
+            'LOTE_BD' => 2000,
             'LOTE_IMG' => 25,
             'MANTENER_WATERMARK' => 1,
             'CRON_FRECUENCIA' => 'off',
@@ -66,7 +66,7 @@ class JosralimpiezaCore
         $settings['ANTIGUEDAD_REGISTROS'] = max(0, (int) $settings['ANTIGUEDAD_REGISTROS']);
         $settings['ANTIGUEDAD_CARRITOS'] = max(0, (int) $settings['ANTIGUEDAD_CARRITOS']);
         $settings['RETENCION'] = max(1, (int) $settings['RETENCION']);
-        $settings['LOTE_BD'] = min(5000, max(50, (int) $settings['LOTE_BD']));
+        $settings['LOTE_BD'] = min(50000, max(50, (int) $settings['LOTE_BD']));
         $settings['LOTE_IMG'] = min(500, max(5, (int) $settings['LOTE_IMG']));
         $settings['MANTENER_WATERMARK'] = (int) $settings['MANTENER_WATERMARK'] ? 1 : 0;
         $settings['CORREO_ACTIVO'] = (int) $settings['CORREO_ACTIVO'] ? 1 : 0;
