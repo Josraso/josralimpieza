@@ -78,6 +78,15 @@
                         <input type="checkbox" id="jl-con-copia" checked> Guardar copia previa de lo que se borre
                     </label>
                     <div style="margin-top:10px">
+                        <strong>Buscar:</strong>
+                        <input type="text" id="jl-filtro" class="form-control" style="display:inline-block;width:auto;min-width:280px"
+                            placeholder="ps_guest, carritos, imágenes, huérfanas...">
+                        <label style="font-weight:normal;margin:0 0 0 15px">
+                            <input type="checkbox" id="jl-filtro-conteo"> Enseñar solo los que tienen filas
+                        </label>
+                        <span id="jl-filtro-info" class="help-block" style="display:inline-block;margin:0 0 0 10px"></span>
+                    </div>
+                    <div style="margin-top:10px">
                         <strong>Antigüedad para esta limpieza:</strong>
                         <select id="jl-meses" class="fixed-width-lg" style="display:inline-block;width:auto">
                             <option value="">La de Ajustes ({$jl_settings.ANTIGUEDAD_REGISTROS|intval} meses en registros, {$jl_settings.ANTIGUEDAD_CARRITOS|intval} en carritos)</option>
@@ -232,6 +241,11 @@
                     en disco libre al menos lo que pese la tabla más grande que se optimice. Hazlo con la tienda tranquila y nunca lo deja
                     hacer el automático.
                 </div>
+                <p>
+                    <input type="text" id="jl-filtro-opt" class="form-control" style="display:inline-block;width:auto;min-width:280px"
+                        placeholder="Buscar tabla: ps_connections, image, cart...">
+                    <span id="jl-filtro-opt-info" class="help-block" style="display:inline-block;margin:0 0 0 10px"></span>
+                </p>
                 <p>
                     <button type="button" class="btn btn-default jl-bloquea-opt" id="jl-tablas-cargar"><i class="icon-refresh"></i> Ver el estado de las tablas</button>
                     <button type="button" class="btn btn-danger jl-bloquea-opt" id="jl-optimizar"><i class="icon-tasks"></i> Optimizar las marcadas</button>

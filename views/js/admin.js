@@ -183,6 +183,49 @@
         })();
     });
 
+    /* ------------------------------------------------------------------ */
+    /* Buscadores                                                          */
+    /* ------------------------------------------------------------------ */
+
+    function filtrarBd() {
+        var texto = ($('#jl-filtro').val() || '').toLowerCase().replace(/^\s+|\s+$/g, '');
+        var soloConFilas = $('#jl-filtro-conteo').is(':checked');
+        var visibles = 0;
+        $('#jl-bd tbody tr').each(function () {
+            var $fila = $(this);
+            var filas = parseInt($fila.find('.jl-item').data('filas'), 10);
+            var encaja = texto === '' || $fila.text().toLowerCase().indexOf(texto) !== -1;
+            if (encaja && soloConFilas) {
+                encaja = filas > 0;
+            }
+            $fila.toggle(encaja);
+            if (encaja) {
+                ++visibles;
+            }
+        });
+        // un grupo sin nada a la vista estorba
+        $('#jl-bd .panel-default').each(function () {
+            $(this).toggle($(this).find('tbody tr:visible').length > 0);
+        });
+        $('#jl-filtro-info').text(texto === '' && !soloConFilas ? '' : visibles + ' apartados a la vista');
+    }
+
+    $(document).on('keyup change', '#jl-filtro', filtrarBd);
+    $(document).on('change', '#jl-filtro-conteo', filtrarBd);
+
+    $(document).on('keyup change', '#jl-filtro-opt', function () {
+        var texto = ($(this).val() || '').toLowerCase().replace(/^\s+|\s+$/g, '');
+        var visibles = 0;
+        $('#jl-tablas tbody tr').each(function () {
+            var encaja = texto === '' || $(this).text().toLowerCase().indexOf(texto) !== -1;
+            $(this).toggle(encaja);
+            if (encaja) {
+                ++visibles;
+            }
+        });
+        $('#jl-filtro-opt-info').text(texto === '' ? '' : visibles + ' tablas a la vista');
+    });
+
     $(document).on('change', '#jl-meses', function () {
         var valor = $(this).val();
         var $texto = $('#jl-meses-fecha');
@@ -202,18 +245,23 @@
         $('#jl-bd .jl-count').html('—');
     });
 
+    // Con el buscador puesto, marcar y desmarcar actúa sobre lo que se está viendo
+    function itemsVisibles() {
+        return $('#jl-bd tbody tr:visible .jl-item:not(:disabled)');
+    }
+
     $(document).on('click', '#jl-marcar-todo', function () {
-        $('#jl-bd .jl-item:not(:disabled)').prop('checked', true);
+        itemsVisibles().prop('checked', true);
         $('#jl-bd .jl-grupo').prop('checked', true);
     });
 
     $(document).on('click', '#jl-marcar-nada', function () {
-        $('#jl-bd .jl-item').prop('checked', false);
+        $('#jl-bd tbody tr:visible .jl-item').prop('checked', false);
         $('#jl-bd .jl-grupo').prop('checked', false);
     });
 
     $(document).on('click', '#jl-marcar-seguras', function () {
-        $('#jl-bd .jl-item:not(:disabled)').each(function () {
+        itemsVisibles().each(function () {
             $(this).prop('checked', parseInt($(this).data('riesgo'), 10) === 0);
         });
         $('#jl-bd .jl-grupo').prop('checked', false);
@@ -259,6 +307,12 @@
             : 'SIN copia previa: va mucho más rápido, pero lo que se borre NO se podrá recuperar desde el módulo.';
         if (riesgo) {
             aviso += '\n\nHay apartados marcados que conviene revisar antes (carritos, clientes, catálogo).';
+        }
+        var ocultos = $('#jl-bd .jl-item:checked:not(:disabled)').filter(function () {
+            return !$(this).closest('tr').is(':visible');
+        }).length;
+        if (ocultos) {
+            aviso += '\n\nOJO: ' + ocultos + ' de esos apartados están marcados pero el buscador no te los está enseñando.';
         }
         if (!confirm(aviso + '\n\n¿Seguir?')) {
             return;

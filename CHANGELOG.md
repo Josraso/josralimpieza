@@ -1,5 +1,16 @@
 # Cambios
 
+## 1.0.6 — 2026-11-22
+
+- **Buscador en la pestaña Base de datos**: se escribe `ps_guest`, «carritos» o lo que sea y la lista deja a la vista solo lo que
+  encaja, escondiendo los grupos que se quedan vacíos. Con 24 apartados repartidos en seis grupos, leer el nombre de la tabla no
+  bastaba para encontrarla.
+- Casilla **«Enseñar solo los que tienen filas»**, para que después de contar queden a la vista únicamente los apartados con algo que
+  borrar.
+- **Buscador también en Optimizar**, que es una lista de todas las tablas de la tienda.
+- Con el buscador puesto, los botones Todo / Solo lo seguro / Nada actúan sobre lo que se está viendo, y si al limpiar quedan
+  apartados marcados que el buscador esconde, el aviso de confirmación lo dice.
+
 ## 1.0.5 — 2026-11-22
 
 - La columna Tabla de la pestaña Base de datos muestra el **nombre completo con prefijo** (`ps_guest`, no `guest`), que es como se ve
