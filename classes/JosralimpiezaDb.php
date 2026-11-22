@@ -106,7 +106,8 @@ class JosralimpiezaDb
         $groups['visitas'] = array(
             'name' => 'Visitantes e invitados',
             'help' => 'Visitantes anónimos que no llegaron a comprar. Las cuentas con algún pedido no se tocan nunca, ni sus direcciones, '
-                . 'y los mensajes de atención al cliente se quedan como están. El orden importa: primero las cuentas y después lo que cuelga de ellas.',
+                . 'y los mensajes de atención al cliente se quedan como están. El orden importa: primero las cuentas y después lo que cuelga de ellas. '
+                . 'Un invitado solo entra cuando ya no le queda ninguna visita, ni carrito, ni cliente: si acabas de limpiar las visitas, vuelve a contar y saldrán muchos más.',
             'items' => array(
                 self::item(
                     'customer',

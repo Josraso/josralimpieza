@@ -134,7 +134,7 @@
                                                 {if $item.truncate}<span class="label label-default jl-riesgo">se vacía entera</span>{/if}
                                                 {if isset($item.unavailable)}<br><span class="text-muted">{$item.unavailable|escape:'html':'UTF-8'}</span>{/if}
                                             </td>
-                                            <td><code>{$item.table|escape:'html':'UTF-8'}</code></td>
+                                            <td><code>{$jl_prefijo|escape:'html':'UTF-8'}{$item.table|escape:'html':'UTF-8'}</code></td>
                                             <td class="text-right jl-count" data-item="{$iditem|escape:'html':'UTF-8'}">—</td>
                                             <td>
                                                 {if !isset($item.unavailable)}

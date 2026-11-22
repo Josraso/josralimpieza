@@ -1,5 +1,12 @@
 # Cambios
 
+## 1.0.5 — 2026-11-22
+
+- La columna Tabla de la pestaña Base de datos muestra el **nombre completo con prefijo** (`ps_guest`, no `guest`), que es como se ve
+  en el diagnóstico, en Optimizar y en phpMyAdmin. Buscar una tabla por su nombre y no encontrarla despistaba.
+- El grupo Visitantes e invitados explica que **un invitado solo entra cuando ya no le queda ninguna visita, ni carrito, ni cliente**:
+  después de limpiar las visitas hay que volver a contar para que salgan.
+
 ## 1.0.4 — 2026-11-22
 
 - La pestaña Imágenes deja claro **que el escáner solo mira**: mientras no se pulse «Retirar a la cuarentena lo marcado», los archivos

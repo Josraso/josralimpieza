@@ -36,7 +36,7 @@ class Josralimpieza extends Module
     {
         $this->name = 'josralimpieza';
         $this->tab = 'administration';
-        $this->version = '1.0.4';
+        $this->version = '1.0.5';
         $this->author = 'josra';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -470,6 +470,7 @@ class Josralimpieza extends Module
             'jl_backups_html' => $this->renderBackups(),
             'jl_history_html' => $this->renderHistory(),
             'jl_images_html' => $this->renderImageSummary(JosralimpiezaImages::summary(), JosralimpiezaImages::diskUsage()),
+            'jl_prefijo' => _DB_PREFIX_,
             'jl_cuarentena' => str_replace(_PS_ROOT_DIR_ . DIRECTORY_SEPARATOR, '', JosralimpiezaCore::quarantineDir()),
             'jl_cron_url' => $this->cronUrl(),
             'jl_cron_last' => $last ? date('d/m/Y H:i', $last) : '',
