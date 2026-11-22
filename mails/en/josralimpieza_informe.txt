@@ -1,0 +1,18 @@
+Cleanup of {shop_name}
+
+Automatic cleanup on {fecha}.
+{resumen}
+
+What was cleaned:
+{texto}
+
+Current state of the shop:
+- Database size: {peso_bd}
+- Wasted space (reclaimed by optimising): {desperdiciado}
+- Product images: {peso_imagenes}
+- In quarantine: {peso_cuarentena}
+
+Open the module: {url}
+
+Todo lo que se ha borrado está guardado en una copia del módulo, desde la que se puede
+devolver a su sitio. El automático no toca nunca imágenes, carritos, clientes ni optimiza tablas.

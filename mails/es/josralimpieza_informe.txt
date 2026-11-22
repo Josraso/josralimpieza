@@ -1,0 +1,18 @@
+Limpieza de {shop_name}
+
+Limpieza automática del {fecha}.
+{resumen}
+
+Qué se ha limpiado:
+{texto}
+
+Cómo está la tienda ahora:
+- Peso de la base de datos: {peso_bd}
+- Espacio desperdiciado (se recupera optimizando): {desperdiciado}
+- Imágenes de producto: {peso_imagenes}
+- En cuarentena: {peso_cuarentena}
+
+Abrir el módulo: {url}
+
+Todo lo que se ha borrado está guardado en una copia del módulo, desde la que se puede
+devolver a su sitio. El automático no toca nunca imágenes, carritos, clientes ni optimiza tablas.

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Limpieza de la tienda</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#333">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f4f4;padding:20px 0">
+    <tr>
+        <td align="center">
+            <table width="620" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:1px solid #e0e0e0">
+                <tr>
+                    <td style="padding:18px 24px;background:#2d4a6b;color:#ffffff;font-size:17px">
+                        Limpieza de {shop_name}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:24px;font-size:14px;line-height:1.6">
+                        <p style="margin:0 0 14px">Limpieza automática del <strong>{fecha}</strong>.</p>
+                        <p style="margin:0 0 14px">{resumen}</p>
+
+                        <p style="margin:18px 0 6px"><strong>Qué se ha limpiado</strong></p>
+                        <ul style="margin:0 0 14px;padding-left:20px">{apartados}</ul>
+
+                        {errores}
+
+                        <p style="margin:18px 0 6px"><strong>Cómo está la tienda ahora</strong></p>
+                        <table cellpadding="6" cellspacing="0" border="0" width="100%" style="font-size:14px;border-collapse:collapse">
+                            <tr><td style="border-bottom:1px solid #eee">Peso de la base de datos</td><td style="border-bottom:1px solid #eee" align="right"><strong>{peso_bd}</strong></td></tr>
+                            <tr><td style="border-bottom:1px solid #eee">Espacio desperdiciado (se recupera optimizando)</td><td style="border-bottom:1px solid #eee" align="right"><strong>{desperdiciado}</strong></td></tr>
+                            <tr><td style="border-bottom:1px solid #eee">Imágenes de producto</td><td style="border-bottom:1px solid #eee" align="right"><strong>{peso_imagenes}</strong></td></tr>
+                            <tr><td>En cuarentena</td><td align="right"><strong>{peso_cuarentena}</strong></td></tr>
+                        </table>
+
+                        <p style="margin:20px 0 0">
+                            <a href="{url}" style="background:#2d4a6b;color:#ffffff;text-decoration:none;padding:10px 18px;display:inline-block">Abrir el módulo</a>
+                        </p>
+                        <p style="margin:18px 0 0;font-size:12px;color:#777">
+                            Todo lo que se ha borrado está guardado en una copia del módulo, desde la que se puede devolver a su sitio.
+                            El automático no toca nunca imágenes, carritos, clientes ni optimiza tablas.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
