@@ -1,5 +1,15 @@
 # Cambios
 
+## 1.0.4 — 2026-11-22
+
+- La pestaña Imágenes deja claro **que el escáner solo mira**: mientras no se pulse «Retirar a la cuarentena lo marcado», los archivos
+  siguen en su sitio y la tienda pesa lo mismo.
+- Dice también **dónde acaban** los archivos retirados (la ruta exacta de la cuarentena) y **cuándo se recupera el espacio**: mover no
+  libera disco, el peso baja al borrar el lote en Copias e historial o cuando pasan los días de retención.
+- Avisa de que sin marcar la casilla de la copia de seguridad el botón de retirar no hace nada.
+- **Retirar imágenes va bastante más rápido**: antes se hacían dos consultas a la base de datos por cada archivo movido, lo que con
+  cientos de miles de miniaturas multiplicaba el tiempo. Ahora se apunta el total una sola vez por lote.
+
 ## 1.0.3 — 2026-11-22
 
 Cuando una tabla enorme no se vacía, casi siempre es por la fecha, y eso no se veía por ningún lado. Ahora sí:

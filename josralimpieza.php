@@ -36,7 +36,7 @@ class Josralimpieza extends Module
     {
         $this->name = 'josralimpieza';
         $this->tab = 'administration';
-        $this->version = '1.0.3';
+        $this->version = '1.0.4';
         $this->author = 'josra';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -470,6 +470,7 @@ class Josralimpieza extends Module
             'jl_backups_html' => $this->renderBackups(),
             'jl_history_html' => $this->renderHistory(),
             'jl_images_html' => $this->renderImageSummary(JosralimpiezaImages::summary(), JosralimpiezaImages::diskUsage()),
+            'jl_cuarentena' => str_replace(_PS_ROOT_DIR_ . DIRECTORY_SEPARATOR, '', JosralimpiezaCore::quarantineDir()),
             'jl_cron_url' => $this->cronUrl(),
             'jl_cron_last' => $last ? date('d/m/Y H:i', $last) : '',
             'jl_cron_summary' => (string) Configuration::getGlobalValue(JosralimpiezaCore::key('CRON_RESUMEN')),
@@ -922,6 +923,16 @@ class Josralimpieza extends Module
 
         if (!$summary['kinds']) {
             return $html . '<p class="alert alert-info">' . $this->l('Todavía no se ha escaneado nada, o no se encontró ninguna imagen huérfana.') . '</p>';
+        }
+
+        if ($summary['total_files'] > 0) {
+            $html .= '<div class="alert alert-info">'
+                . sprintf(
+                    $this->l('El escáner solo mira y apunta: %1$s en %2$d archivos siguen en su sitio y la tienda pesa lo mismo. No se mueve nada hasta que pulses «Retirar a la cuarentena lo marcado».'),
+                    '<strong>' . $summary['total_human'] . '</strong>',
+                    (int) $summary['total_files']
+                )
+                . '</div>';
         }
 
         $html .= '<div class="table-responsive"><table class="table"><thead><tr>'

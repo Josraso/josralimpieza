@@ -187,10 +187,18 @@
                     Lo que no encaja en ningún caso (nombres raros y las imágenes planas de tiendas anteriores a la 1.5, que están en la raíz
                     de <code>img/p</code>) solo se cuenta, no se toca nunca.
                 </p>
+                <div class="alert alert-info">
+                    <strong>Dónde acaban y cuándo baja el peso.</strong> Al pulsar «Retirar a la cuarentena lo marcado», los archivos se
+                    mueven a <code>{$jl_cuarentena|escape:'html':'UTF-8'}lote-&lt;fecha&gt;/</code>, con la misma ruta que tenían dentro de
+                    <code>img/</code>. Mover <strong>no libera disco</strong>: los archivos siguen en el mismo servidor, solo que fuera de
+                    la tienda. El espacio se recupera cuando se borra el lote, en <em>Copias e historial</em> con el botón Borrar, o solo
+                    cuando pasan los días de retención. Hasta entonces se devuelven enteros con Restaurar.
+                </div>
                 <div class="alert alert-warning">
                     <label style="font-weight:bold">
                         <input type="checkbox" id="jl-img-confirmo"> Tengo una copia de seguridad completa del servidor hecha hoy
                     </label>
+                    <div>Sin marcar esta casilla, el botón de retirar no hace nada.</div>
                 </div>
                 <p>
                     <button type="button" class="btn btn-primary jl-bloquea-img jl-escanear" id="jl-img-escanear" data-reiniciar="1"><i class="icon-search"></i> Escanear de cero</button>

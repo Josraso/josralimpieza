@@ -450,6 +450,11 @@ class JosralimpiezaImages
             return array('moved' => 0, 'bytes' => 0, 'done' => true);
         }
 
+        $backup = JosralimpiezaBackup::get($idBackup);
+        if (!$backup || $backup['kind'] !== 'imagenes') {
+            return 'El lote de cuarentena número ' . (int) $idBackup . ' no existe: no se mueve nada.';
+        }
+
         $moved = 0;
         $bytes = 0;
         $skipped = 0;
@@ -457,10 +462,10 @@ class JosralimpiezaImages
         $handled = array();
         foreach ($rows as $row) {
             $absolute = self::root() . $row['path'];
-            $result = JosralimpiezaBackup::quarantine($idBackup, $absolute);
-            if ($result === true) {
+            $result = JosralimpiezaBackup::moveFile($backup, $absolute);
+            if (is_int($result)) {
                 ++$moved;
-                $bytes += (float) $row['bytes'];
+                $bytes += $result;
                 $handled[] = (int) $row['id_scan'];
             } elseif (!file_exists($absolute)) {
                 // Ya no estaba: se da por hecho
@@ -474,6 +479,8 @@ class JosralimpiezaImages
             }
         }
 
+        // Una sola consulta por lote, no una por archivo
+        JosralimpiezaBackup::addItems($idBackup, $moved, $bytes);
         if ($handled) {
             Db::getInstance()->execute(
                 'UPDATE ' . self::table() . ' SET `status` = 1 WHERE `id_scan` IN (' . implode(', ', $handled) . ')'

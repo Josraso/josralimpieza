@@ -152,6 +152,24 @@ class JosralimpiezaBackup
         if (!$backup || $backup['kind'] !== 'imagenes') {
             return 'El lote de cuarentena número ' . (int) $id . ' no existe: no se mueve nada.';
         }
+        $moved = self::moveFile($backup, $file);
+        if (!is_int($moved)) {
+            return $moved;
+        }
+        self::addItems($id, 1, $moved);
+
+        return true;
+    }
+
+    /**
+     * Mueve un archivo al lote, sin tocar la base de datos. Para mover cientos de
+     * miles de miniaturas, una consulta por archivo multiplica el tiempo por tres:
+     * quien llama acumula y apunta el total una sola vez con addItems().
+     *
+     * @return int|string bytes movidos o el motivo del fallo
+     */
+    public static function moveFile($backup, $file)
+    {
         if (!file_exists($file)) {
             return 'El archivo ' . $file . ' ya no está en la tienda.';
         }
@@ -160,8 +178,9 @@ class JosralimpiezaBackup
         }
         $relative = Tools::substr($file, Tools::strlen(_PS_IMG_DIR_));
         $target = self::path($backup) . $relative;
-        if (!is_dir(dirname($target)) && !@mkdir(dirname($target), 0755, true)) {
-            return 'No se puede crear ' . dirname($target) . ' en la cuarentena (permisos).';
+        $dir = dirname($target);
+        if (!is_dir($dir) && !@mkdir($dir, 0755, true)) {
+            return 'No se puede crear ' . $dir . ' en la cuarentena (permisos).';
         }
         $bytes = (int) @filesize($file);
         if (!@rename($file, $target)) {
@@ -170,13 +189,23 @@ class JosralimpiezaBackup
             }
             @unlink($file);
         }
+
+        return $bytes;
+    }
+
+    /**
+     * Apunta de una vez lo que se ha metido en el lote.
+     */
+    public static function addItems($id, $count, $bytes)
+    {
+        if (!$count) {
+            return;
+        }
         Db::getInstance()->execute(
             'UPDATE `' . _DB_PREFIX_ . 'josralimpieza_backup`
-                SET `items` = `items` + 1, `bytes` = `bytes` + ' . $bytes . '
+                SET `items` = `items` + ' . (int) $count . ', `bytes` = `bytes` + ' . (int) $bytes . '
               WHERE `id_backup` = ' . (int) $id
         );
-
-        return true;
     }
 
     /**
