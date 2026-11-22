@@ -1,5 +1,16 @@
 # Cambios
 
+## 1.0.7 — 2026-11-22
+
+- **Cada apartado de riesgo dice qué hay que revisar**, con una línea debajo del nombre. Poner «revisar antes» sin decir el qué no
+  servía de nada.
+- El grupo Visitantes e invitados explica **qué es un invitado**: un visitante anónimo del que PrestaShop guarda una fila por
+  navegador, solo para las estadísticas de visitas. Ni cliente, ni pedido, ni nada del negocio.
+- **Apartado nuevo: «Invitados sin ninguna visita, aunque tengan carrito o cliente»**, que es el que vacía la tabla de verdad. El
+  carrito y la cuenta del cliente se quedan igual; solo pierden el enlace con su visitante, que únicamente usan las estadísticas.
+- «Invitados anónimos que ya no tienen ni visitas, ni carrito, ni cliente» pasa a ser **riesgo cero**: no deja nada colgando, así que
+  ahora viene marcado por defecto y lo puede hacer el automático.
+
 ## 1.0.6 — 2026-11-22
 
 - **Buscador en la pestaña Base de datos**: se escribe `ps_guest`, «carritos» o lo que sea y la lista deja a la vista solo lo que

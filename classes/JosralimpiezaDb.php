@@ -103,11 +103,25 @@ class JosralimpiezaDb
         );
 
         /* --- Visitantes e invitados ------------------------------------ */
+        $guestTodos = self::item(
+            'guest',
+            'Invitados sin ninguna visita, aunque tengan carrito o cliente',
+            1,
+            '`c`.`id_guest` IS NULL',
+            array('guest.id_guest', 'connections.id_guest'),
+            'LEFT JOIN `' . _DB_PREFIX_ . 'connections` `c` ON `c`.`id_guest` = `t`.`id_guest`',
+            'Qué se pierde: nada del negocio. El carrito y la cuenta del cliente se quedan igual, solo dejan de estar enlazados con su '
+                . 'visitante, y ese enlace solo lo usan las estadísticas de visitas. Este es el apartado que hay que marcar si lo que '
+                . 'quieres es que ' . _DB_PREFIX_ . 'guest deje de pesar.'
+        );
+        $guestTodos['id'] = 'guest_sin_visitas';
+
         $groups['visitas'] = array(
             'name' => 'Visitantes e invitados',
-            'help' => 'Visitantes anónimos que no llegaron a comprar. Las cuentas con algún pedido no se tocan nunca, ni sus direcciones, '
-                . 'y los mensajes de atención al cliente se quedan como están. El orden importa: primero las cuentas y después lo que cuelga de ellas. '
-                . 'Un invitado solo entra cuando ya no le queda ninguna visita, ni carrito, ni cliente: si acabas de limpiar las visitas, vuelve a contar y saldrán muchos más.',
+            'help' => 'Un «invitado» es un visitante anónimo: PrestaShop guarda una fila por cada navegador que entra en la tienda '
+                . '(sistema, navegador, resolución) y la usa solo para las estadísticas de visitas. No es un cliente, ni un pedido, ni nada '
+                . 'del negocio, y se vuelve a crear sola en cuanto alguien entra. Las cuentas con algún pedido no se tocan nunca, ni sus '
+                . 'direcciones, y los mensajes de atención al cliente se quedan como están.',
             'items' => array(
                 self::item(
                     'customer',
@@ -115,7 +129,9 @@ class JosralimpiezaDb
                     1,
                     '`t`.`is_guest` = 1 AND `t`.`date_add` < \'' . pSQL($oldCarts) . '\' AND `o`.`id_order` IS NULL',
                     array('customer.is_guest', 'customer.date_add', 'orders.id_customer'),
-                    'LEFT JOIN `' . _DB_PREFIX_ . 'orders` `o` ON `o`.`id_customer` = `t`.`id_customer`'
+                    'LEFT JOIN `' . _DB_PREFIX_ . 'orders` `o` ON `o`.`id_customer` = `t`.`id_customer`',
+                    'Qué mirar: son cuentas creadas al comprar como invitado que nunca llegaron a tener pedido. Dale a Ver y comprueba '
+                        . 'que no estés usando esos correos para la newsletter o para avisos.'
                 ),
                 self::orphan('customer_group', 'id_customer', 'customer', 'id_customer', 'Grupos de clientes que ya no existen', 0),
                 self::item(
@@ -126,18 +142,21 @@ class JosralimpiezaDb
                     array('address.id_customer', 'customer.id_customer', 'orders.id_address_delivery', 'orders.id_address_invoice'),
                     'LEFT JOIN `' . _DB_PREFIX_ . 'customer` `c` ON `c`.`id_customer` = `t`.`id_customer`'
                     . ' LEFT JOIN `' . _DB_PREFIX_ . 'orders` `oe` ON `oe`.`id_address_delivery` = `t`.`id_address`'
-                    . ' LEFT JOIN `' . _DB_PREFIX_ . 'orders` `oi` ON `oi`.`id_address_invoice` = `t`.`id_address`'
+                    . ' LEFT JOIN `' . _DB_PREFIX_ . 'orders` `oi` ON `oi`.`id_address_invoice` = `t`.`id_address`',
+                    'Qué mirar: solo entran direcciones cuyo cliente ya no existe y que no salen en ningún pedido, ni de envío ni de '
+                        . 'facturación, así que ningún pedido viejo se queda sin su dirección.'
                 ),
                 self::item(
                     'guest',
-                    'Invitados anónimos sin visitas, sin carrito y sin cliente',
-                    1,
+                    'Invitados anónimos que ya no tienen ni visitas, ni carrito, ni cliente',
+                    0,
                     '(`t`.`id_customer` IS NULL OR `cu`.`id_customer` IS NULL) AND `c`.`id_guest` IS NULL AND `ca`.`id_guest` IS NULL',
                     array('guest.id_customer', 'connections.id_guest', 'cart.id_guest', 'customer.id_customer'),
                     'LEFT JOIN `' . _DB_PREFIX_ . 'connections` `c` ON `c`.`id_guest` = `t`.`id_guest`'
                     . ' LEFT JOIN `' . _DB_PREFIX_ . 'cart` `ca` ON `ca`.`id_guest` = `t`.`id_guest`'
                     . ' LEFT JOIN `' . _DB_PREFIX_ . 'customer` `cu` ON `cu`.`id_customer` = `t`.`id_customer`'
                 ),
+                $guestTodos,
             ),
         );
 
@@ -153,11 +172,15 @@ class JosralimpiezaDb
                     1,
                     '`t`.`date_add` < \'' . pSQL($oldCarts) . '\' AND `o`.`id_order` IS NULL',
                     array('cart.date_add', 'orders.id_cart'),
-                    'LEFT JOIN `' . _DB_PREFIX_ . 'orders` `o` ON `o`.`id_cart` = `t`.`id_cart`'
+                    'LEFT JOIN `' . _DB_PREFIX_ . 'orders` `o` ON `o`.`id_cart` = `t`.`id_cart`',
+                    'Qué mirar: ningún carrito que ya sea pedido se toca. Lo único que cambia es que las estadísticas de carritos '
+                        . 'abandonados y los módulos que recuperan carritos dejarán de ver los antiguos.'
                 ),
                 self::orphan('cart_product', 'id_cart', 'cart', 'id_cart', 'Líneas de carritos que ya no existen', 0),
                 self::orphan('cart_cart_rule', 'id_cart', 'cart', 'id_cart', 'Cupones de carritos que ya no existen', 0),
-                self::orphan('customization', 'id_cart', 'cart', 'id_cart', 'Personalizaciones de carritos que ya no existen', 1),
+                self::orphan('customization', 'id_cart', 'cart', 'id_cart', 'Personalizaciones de carritos que ya no existen', 1, '',
+                    'Qué mirar: es el texto o la imagen que el cliente puso en un producto personalizable, de carritos que ya no están. '
+                    . 'Solo importa si vendes productos personalizables.'),
                 self::orphan('specific_price', 'id_cart', 'cart', 'id_cart', 'Precios puntuales de carritos que ya no existen', 0, '`t`.`id_cart` != 0'),
             ),
         );
@@ -168,13 +191,14 @@ class JosralimpiezaDb
             'help' => 'Filas que apuntan a productos, imágenes o fichas que ya no existen: solo ocupan sitio y ralentizan consultas. '
                 . 'El orden importa, así que se limpian de arriba abajo.',
             'items' => array(
-                self::orphan('image', 'id_product', 'product', 'id_product', 'Imágenes de productos borrados', 1),
+                self::orphan('image', 'id_product', 'product', 'id_product', 'Imágenes de productos borrados', 1, '',
+                    'Qué mirar: si borraste un producto por error y pensabas recuperarlo, aquí perderías sus imágenes.'),
                 self::orphan('image_lang', 'id_image', 'image', 'id_image', 'Textos de imágenes que ya no existen', 0),
                 self::orphan('image_shop', 'id_image', 'image', 'id_image', 'Imágenes por tienda que ya no existen', 0),
-                self::orphan('specific_price', 'id_product', 'product', 'id_product', 'Precios específicos de productos borrados', 1, '`t`.`id_product` != 0'),
-                self::orphan('stock_available', 'id_product', 'product', 'id_product', 'Stock de productos borrados', 1, '`t`.`id_product` != 0'),
-                self::orphan('category_product', 'id_product', 'product', 'id_product', 'Productos en categorías que ya no existen', 1),
-                self::orphan('product_attribute', 'id_product', 'product', 'id_product', 'Combinaciones de productos borrados', 1),
+                self::orphan('specific_price', 'id_product', 'product', 'id_product', 'Precios específicos de productos borrados', 1, '`t`.`id_product` != 0', 'Qué mirar: precios específicos de productos que ya no existen; ningún producto vivo se queda sin precio.'),
+                self::orphan('stock_available', 'id_product', 'product', 'id_product', 'Stock de productos borrados', 1, '`t`.`id_product` != 0', 'Qué mirar: stock de productos que ya no existen; el stock de los productos vivos no se toca.'),
+                self::orphan('category_product', 'id_product', 'product', 'id_product', 'Productos en categorías que ya no existen', 1, '', 'Qué mirar: productos que ya no existen colgando de categorías; las categorías no se tocan.'),
+                self::orphan('product_attribute', 'id_product', 'product', 'id_product', 'Combinaciones de productos borrados', 1, '', 'Qué mirar: combinaciones de productos que ya no existen; las de los productos vivos no se tocan.'),
                 self::orphan('product_attribute_combination', 'id_product_attribute', 'product_attribute', 'id_product_attribute', 'Atributos de combinaciones que ya no existen', 0),
                 self::orphan('product_attribute_shop', 'id_product_attribute', 'product_attribute', 'id_product_attribute', 'Combinaciones por tienda que ya no existen', 0),
                 self::orphan('feature_product', 'id_product', 'product', 'id_product', 'Características de productos borrados', 0),
@@ -203,8 +227,10 @@ class JosralimpiezaDb
                 . 'Se vacía entero y hay que reconstruirlo después en Preferencias > Buscar > Reconstruir el índice completo. '
                 . 'Mientras no se reconstruya, el buscador de la tienda no encuentra nada.',
             'items' => array(
-                self::truncateItem('search_index', 'Índice de búsqueda', 2),
-                self::truncateItem('search_word', 'Palabras del buscador', 2),
+                self::truncateItem('search_index', 'Índice de búsqueda', 2,
+                    'Hay que reconstruirlo después en Preferencias > Buscar > Reconstruir el índice completo. Mientras tanto el buscador de la tienda no encuentra nada.'),
+                self::truncateItem('search_word', 'Palabras del buscador', 2,
+                    'Va con el índice de búsqueda: se reconstruyen juntos.'),
             ),
         );
 
@@ -251,10 +277,11 @@ class JosralimpiezaDb
      * @param array  $requires tablas y columnas que deben existir ('tabla' o 'tabla.columna')
      * @param string $joins    uniones opcionales
      */
-    protected static function item($table, $name, $risk, $where, array $requires = array(), $joins = '')
+    protected static function item($table, $name, $risk, $where, array $requires = array(), $joins = '', $review = '')
     {
         return array(
             'id' => $table,
+            'review' => $review,
             'table' => $table,
             'name' => $name,
             'risk' => (int) $risk,
@@ -269,12 +296,13 @@ class JosralimpiezaDb
     /**
      * Apartado de filas huérfanas: las de $table cuya $column no está en $parent.
      */
-    protected static function orphan($table, $column, $parent, $parentColumn, $name, $risk, $extra = '')
+    protected static function orphan($table, $column, $parent, $parentColumn, $name, $risk, $extra = '', $review = '')
     {
         $where = '`p`.`' . bqSQL($parentColumn) . '` IS NULL' . ($extra !== '' ? ' AND ' . $extra : '');
 
         return array(
             'id' => $table . '__' . $column,
+            'review' => $review,
             'table' => $table,
             'name' => $name,
             'risk' => (int) $risk,
@@ -289,10 +317,11 @@ class JosralimpiezaDb
     /**
      * Apartado que vacía la tabla entera (caché o índices que se regeneran).
      */
-    protected static function truncateItem($table, $name, $risk)
+    protected static function truncateItem($table, $name, $risk, $review = '')
     {
         return array(
             'id' => 'truncate_' . $table,
+            'review' => $review,
             'table' => $table,
             'name' => $name,
             'risk' => (int) $risk,

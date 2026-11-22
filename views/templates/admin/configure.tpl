@@ -141,6 +141,7 @@
                                                 {if $item.risk == 1}<span class="label label-warning jl-riesgo">revisar antes</span>{/if}
                                                 {if $item.risk == 2}<span class="label label-danger jl-riesgo">hay que reconstruirlo después</span>{/if}
                                                 {if $item.truncate}<span class="label label-default jl-riesgo">se vacía entera</span>{/if}
+                                                {if isset($item.review) && $item.review}<br><span class="text-muted" style="font-size:12px">{$item.review|escape:'html':'UTF-8'}</span>{/if}
                                                 {if isset($item.unavailable)}<br><span class="text-muted">{$item.unavailable|escape:'html':'UTF-8'}</span>{/if}
                                             </td>
                                             <td><code>{$jl_prefijo|escape:'html':'UTF-8'}{$item.table|escape:'html':'UTF-8'}</code></td>
