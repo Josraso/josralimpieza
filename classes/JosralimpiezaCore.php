@@ -18,6 +18,9 @@ class JosralimpiezaCore
     /** @var array columnas reales por tabla */
     protected static $columns = array();
 
+    /** @var array|null estado de las tablas, leído una sola vez por petición */
+    protected static $status = null;
+
     /* ------------------------------------------------------------------ */
     /* Ajustes                                                             */
     /* ------------------------------------------------------------------ */
@@ -265,8 +268,11 @@ class JosralimpiezaCore
     /**
      * Estado real de las tablas de la tienda: tamaño, espacio desperdiciado y motor.
      */
-    public static function tableStatus()
+    public static function tableStatus($refresh = false)
     {
+        if (self::$status !== null && !$refresh) {
+            return self::$status;
+        }
         $rows = Db::getInstance()->executeS('SHOW TABLE STATUS');
         $tables = array();
         if (!is_array($rows)) {
@@ -288,8 +294,26 @@ class JosralimpiezaCore
             );
         }
         usort($tables, array('JosralimpiezaCore', 'sortBySize'));
+        self::$status = $tables;
 
         return $tables;
+    }
+
+    /**
+     * Filas que dice tener la tabla. En InnoDB es una estimación del propio
+     * MySQL, no un recuento: vale para hacerse una idea, no para decidir.
+     *
+     * @param string $table nombre sin prefijo
+     */
+    public static function approxRows($table)
+    {
+        foreach (self::tableStatus() as $status) {
+            if ($status['name'] === _DB_PREFIX_ . $table) {
+                return (int) $status['rows'];
+            }
+        }
+
+        return 0;
     }
 
     public static function sortBySize($a, $b)
@@ -324,6 +348,7 @@ class JosralimpiezaCore
             return 'No se pudo optimizar ' . $name . ': ' . Db::getInstance()->getMsgError();
         }
         self::$tables = null;
+        self::$status = null;
         $after = 0;
         $rows = Db::getInstance()->executeS('SHOW TABLE STATUS');
         if (is_array($rows)) {

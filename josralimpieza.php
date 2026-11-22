@@ -36,7 +36,7 @@ class Josralimpieza extends Module
     {
         $this->name = 'josralimpieza';
         $this->tab = 'administration';
-        $this->version = '1.0.2';
+        $this->version = '1.0.3';
         $this->author = 'josra';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -497,6 +497,10 @@ class Josralimpieza extends Module
             ob_end_clean();
         }
         $action = Tools::getValue('accion');
+        $meses = Tools::getValue('meses');
+        if ($meses !== false && $meses !== '' && is_numeric($meses)) {
+            JosralimpiezaDb::$months = max(0, (int) $meses);
+        }
         $response = array('ok' => false, 'error' => 'Acción desconocida: ' . Tools::safeOutput($action));
 
         try {
@@ -637,7 +641,13 @@ class Josralimpieza extends Module
             return array('ok' => false, 'error' => (string) $count);
         }
 
-        return array('ok' => true, 'item' => $item['id'], 'filas' => $count);
+        return array(
+            'ok' => true,
+            'item' => $item['id'],
+            'filas' => $count,
+            // Para que se vea de un vistazo "0 de 6 millones": casi siempre es la fecha
+            'total' => JosralimpiezaCore::approxRows($item['table']),
+        );
     }
 
     protected function ajaxVer()
@@ -868,7 +878,7 @@ class Josralimpieza extends Module
             $html .= '<th style="width:30px"><input type="checkbox" id="jl-tablas-todas"></th>';
         }
         $html .= '<th>' . $this->l('Tabla') . '</th><th>' . $this->l('Motor') . '</th>'
-            . '<th class="text-right">' . $this->l('Filas') . '</th>'
+            . '<th class="text-right">' . $this->l('Filas (aprox.)') . '</th>'
             . '<th class="text-right">' . $this->l('Peso') . '</th>'
             . '<th class="text-right">' . $this->l('Desperdiciado') . '</th></tr></thead><tbody>';
         $shown = 0;
@@ -890,6 +900,10 @@ class Josralimpieza extends Module
                 . '</tr>';
         }
         $html .= '</tbody></table></div>';
+        $html .= '<p class="help-block">'
+            . $this->l('Las filas son la estimación que da MySQL para las tablas InnoDB, no un recuento exacto: para saber de verdad cuántas filas se pueden borrar, usa «Contar lo que hay» en la pestaña Base de datos. ')
+            . $this->l('Y el peso no baja al borrar: InnoDB se queda el espacio reservado hasta que se optimiza la tabla, así que después de una limpieza grande el peso solo cambia al pasar por la pestaña Optimizar.')
+            . '</p>';
         if ($limit && count($tables) > $limit) {
             $html .= '<p class="help-block">' . sprintf($this->l('Las %d tablas más grandes de %d. El resto está en la pestaña Optimizar.'), $limit, count($tables)) . '</p>';
         }

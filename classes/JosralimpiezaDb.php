@@ -23,6 +23,9 @@ class JosralimpiezaDb
     /** @var array claves primarias reales por tabla */
     protected static $keys = array();
 
+    /** @var int|null antigüedad en meses forzada desde la pantalla (null: la de los ajustes) */
+    public static $months = null;
+
     /**
      * Clave primaria real de la tabla, leída de la base de datos.
      *
@@ -63,6 +66,10 @@ class JosralimpiezaDb
     public static function groups()
     {
         $settings = JosralimpiezaCore::settings();
+        if (self::$months !== null) {
+            $settings['ANTIGUEDAD_REGISTROS'] = (int) self::$months;
+            $settings['ANTIGUEDAD_CARRITOS'] = (int) self::$months;
+        }
         $old = JosralimpiezaCore::cutoff($settings['ANTIGUEDAD_REGISTROS']);
         $oldCarts = JosralimpiezaCore::cutoff($settings['ANTIGUEDAD_CARRITOS']);
         $meses = (int) $settings['ANTIGUEDAD_REGISTROS'];
@@ -74,7 +81,7 @@ class JosralimpiezaDb
         $groups['registros'] = array(
             'name' => 'Registros y estadísticas',
             'help' => 'Lo que la tienda apunta de cada visita y de cada aviso. No se usa para nada del negocio y suele ser lo que más pesa. '
-                . 'Se borra lo anterior a ' . $meses . ' ' . ($meses === 1 ? 'mes' : 'meses') . '.',
+                . self::cutoffText($meses, $old),
             'items' => array(
                 self::item('log', 'Registro de errores y avisos de la tienda', 0, '`t`.`date_add` < \'' . pSQL($old) . '\'', array('log.date_add')),
                 self::item('connections_source', 'De dónde llegaron las visitas', 0, '`t`.`date_add` < \'' . pSQL($old) . '\'', array('connections_source.date_add')),
@@ -136,8 +143,8 @@ class JosralimpiezaDb
         /* --- Carritos abandonados -------------------------------------- */
         $groups['carritos'] = array(
             'name' => 'Carritos abandonados',
-            'help' => 'Carritos de más de ' . $mesesCarritos . ' ' . ($mesesCarritos === 1 ? 'mes' : 'meses') . ' que nunca llegaron a ser pedido. '
-                . 'Un carrito con pedido no se borra nunca. Ojo: las estadísticas de carritos abandonados contarán menos.',
+            'help' => 'Carritos que nunca llegaron a ser pedido. ' . self::cutoffText($mesesCarritos, $oldCarts)
+                . ' Un carrito con pedido no se borra nunca. Ojo: las estadísticas de carritos abandonados contarán menos.',
             'items' => array(
                 self::item(
                     'cart',
@@ -217,6 +224,20 @@ class JosralimpiezaDb
         }
 
         return $groups;
+    }
+
+    /**
+     * Frase con la fecha exacta a partir de la cual se borra, que es la pregunta
+     * que siempre surge al ver que una tabla enorme no se vacía.
+     */
+    protected static function cutoffText($meses, $fecha)
+    {
+        if ((int) $meses <= 0) {
+            return 'Ahora mismo se borra TODO, sin mirar la fecha.';
+        }
+
+        return 'Ahora mismo se borra solo lo anterior al ' . date('d/m/Y', strtotime($fecha))
+            . ' (' . (int) $meses . ' ' . ((int) $meses === 1 ? 'mes' : 'meses') . '): lo más nuevo no se toca.';
     }
 
     /**

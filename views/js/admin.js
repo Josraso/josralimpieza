@@ -24,6 +24,10 @@
     function post(accion, data, done) {
         data = data || {};
         data.accion = accion;
+        var $meses = $('#jl-meses');
+        if ($meses.length && typeof data.meses === 'undefined') {
+            data.meses = $meses.val();
+        }
         $.ajax({ url: url, type: 'POST', data: data, dataType: 'json' })
             .done(function (r) {
                 done(r && typeof r === 'object' ? r : { ok: false, error: 'El servidor devolvió una respuesta vacía.' });
@@ -163,7 +167,12 @@
             post('contar', { item: item }, function (r) {
                 var $celda = $('#jl-bd .jl-count[data-item="' + item + '"]');
                 if (r.ok) {
-                    $celda.html(r.filas > 0 ? '<strong>' + r.filas + '</strong>' : '0');
+                    var total = parseInt(r.total, 10) || 0;
+                    var texto = r.filas > 0 ? '<strong>' + r.filas + '</strong>' : '0';
+                    if (total > 0 && r.filas < total) {
+                        texto += ' <span class="text-muted">de ~' + total + '</span>';
+                    }
+                    $celda.html(texto);
                     $('#jl-bd .jl-item[value="' + item + '"]').data('filas', r.filas);
                 } else {
                     $celda.html('<span class="text-danger">error</span>');
@@ -172,6 +181,25 @@
                 siguiente();
             });
         })();
+    });
+
+    $(document).on('change', '#jl-meses', function () {
+        var valor = $(this).val();
+        var $texto = $('#jl-meses-fecha');
+        if (valor === '') {
+            $texto.text('');
+            return;
+        }
+        if (parseInt(valor, 10) === 0) {
+            $texto.html('<strong>Se borrará todo lo del apartado, sin mirar la fecha.</strong>');
+            return;
+        }
+        var d = new Date();
+        d.setMonth(d.getMonth() - parseInt(valor, 10));
+        $texto.html('Se borrará lo anterior al <strong>'
+            + ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear()
+            + '</strong>. Vuelve a contar para ver cuánto es.');
+        $('#jl-bd .jl-count').html('—');
     });
 
     $(document).on('click', '#jl-marcar-todo', function () {

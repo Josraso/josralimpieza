@@ -1,5 +1,17 @@
 # Cambios
 
+## 1.0.3 — 2026-11-22
+
+Cuando una tabla enorme no se vacía, casi siempre es por la fecha, y eso no se veía por ningún lado. Ahora sí:
+
+- **Selector de antigüedad en la propia pestaña Base de datos**, con «Todo, sin mirar la fecha» entre las opciones. Vale solo para el
+  recuento y la limpieza de ese momento, no toca los ajustes.
+- Cada grupo dice **la fecha exacta** a partir de la cual borra («solo lo anterior al 22/08/2026»), no solo los meses.
+- Al contar, cada apartado muestra **cuántas filas se borrarían del total de la tabla**: si sale «0 de ~6.659.269» queda claro al
+  momento que lo que hay es más nuevo que la fecha, no que la limpieza falle.
+- El Diagnóstico avisa de dos cosas que despistan: las filas de las tablas InnoDB son una **estimación** de MySQL, no un recuento, y
+  **el peso no baja al borrar** porque InnoDB se queda el espacio reservado hasta que se optimiza la tabla.
+
 ## 1.0.2 — 2026-11-22
 
 - **Arreglado: los botones Todo / Solo lo seguro / Nada no hacían nada después de actualizar.** El navegador se quedaba con el

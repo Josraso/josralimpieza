@@ -77,6 +77,24 @@
                     <label style="font-weight:bold">
                         <input type="checkbox" id="jl-con-copia" checked> Guardar copia previa de lo que se borre
                     </label>
+                    <div style="margin-top:10px">
+                        <strong>Antigüedad para esta limpieza:</strong>
+                        <select id="jl-meses" class="fixed-width-lg" style="display:inline-block;width:auto">
+                            <option value="">La de Ajustes ({$jl_settings.ANTIGUEDAD_REGISTROS|intval} meses en registros, {$jl_settings.ANTIGUEDAD_CARRITOS|intval} en carritos)</option>
+                            <option value="0">Todo, sin mirar la fecha</option>
+                            <option value="1">Más de 1 mes</option>
+                            <option value="3">Más de 3 meses</option>
+                            <option value="6">Más de 6 meses</option>
+                            <option value="12">Más de 12 meses</option>
+                            <option value="24">Más de 24 meses</option>
+                        </select>
+                        <span id="jl-meses-fecha" class="help-block" style="display:inline-block;margin:0 0 0 10px"></span>
+                        <div class="help-block" style="margin:6px 0 0">
+                            Solo para el recuento y la limpieza de ahora, no cambia los ajustes. Si una tabla enorme sale a 0 filas es
+                            porque todo lo que tiene es más nuevo que esta fecha: con tráfico de bots, millones de visitas se juntan en
+                            pocas semanas.
+                        </div>
+                    </div>
                     <div class="help-block" style="margin:6px 0 0">
                         La copia deja restaurar lo borrado, pero en tablas de millones de filas es lo que más tarda, porque hay que
                         leer y escribir cada fila. Sin copia, el borrado va directo y es muchísimo más rápido, pero
