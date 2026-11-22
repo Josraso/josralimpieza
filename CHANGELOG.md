@@ -1,5 +1,12 @@
 # Cambios
 
+## 1.0.2 — 2026-11-22
+
+- **Arreglado: los botones Todo / Solo lo seguro / Nada no hacían nada después de actualizar.** El navegador se quedaba con el
+  JavaScript de la versión anterior, que todavía no tenía esos botones. Ahora el CSS y el JavaScript del módulo llevan la versión en
+  la dirección, así que al actualizar el navegador coge siempre los nuevos.
+- La versión del módulo se ve al lado de las pestañas, para saber de un vistazo qué versión está cargada.
+
 ## 1.0.1 — 2026-11-22
 
 - **Mucho más rápida la limpieza de la base de datos.** Antes cada llamada al servidor borraba un solo lote de 500 filas, así que en

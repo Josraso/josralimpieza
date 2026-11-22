@@ -2,9 +2,11 @@
  * Limpieza de base de datos e imágenes — configuración del módulo.
  * @author josra
  *}
-<link rel="stylesheet" type="text/css" href="{$jl_module_dir|escape:'html':'UTF-8'}views/css/admin.css">
+<link rel="stylesheet" type="text/css" href="{$jl_module_dir|escape:'html':'UTF-8'}views/css/admin.css?v={$jl_version|escape:'html':'UTF-8'}">
 
 <div id="josralimpieza">
+
+    <div class="pull-right" style="margin:4px 0 0 10px"><span class="label label-default">v{$jl_version|escape:'html':'UTF-8'}</span></div>
 
     <ul class="nav nav-tabs" style="margin-bottom:15px">
         <li class="active"><a href="#" class="jl-tab" data-pane="diagnostico"><i class="icon-dashboard"></i> Diagnóstico</a></li>
@@ -303,4 +305,4 @@
 <script type="text/javascript">
     var jlAjax = "{$jl_ajax|escape:'javascript':'UTF-8'}";
 </script>
-<script type="text/javascript" src="{$jl_module_dir|escape:'html':'UTF-8'}views/js/admin.js"></script>
+<script type="text/javascript" src="{$jl_module_dir|escape:'html':'UTF-8'}views/js/admin.js?v={$jl_version|escape:'html':'UTF-8'}"></script>
